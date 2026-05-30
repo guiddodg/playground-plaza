@@ -1,0 +1,50 @@
+name: PR Pipeline
+
+on:
+  pull_request:
+    branches: [develop, master]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check EditorConfig
+        uses: editorconfig-checker/action-editorconfig-checker@main
+
+  code-review:
+    name: Code Review (Claude)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Sos el code reviewer del proyecto Unity "Playground Plaza" — una plaza infantil en 3D.
+            El proyecto usa Unity URP con C#. Revisá este PR con foco en:
+
+            - Calidad del código C# y buenas prácticas de Unity
+            - Posibles bugs (null refs, memory leaks, uso incorrecto de Update/FixedUpdate)
+            - Rendimiento (GetComponent en Update, FindObjectOfType, allocations innecesarias)
+            - Convenciones del proyecto (nombres en camelCase para privados, PascalCase para públicos)
+            - Seguridad y robustez
+
+            Para feedback general usá `gh pr comment`.
+            Para señalar líneas específicas usá `mcp__github_inline_comment__create_inline_comment` (con `confirmed: true`).
+            Solo posteá comentarios de GitHub — no respondas como mensaje de texto.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
