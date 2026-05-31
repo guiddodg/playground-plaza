@@ -23,8 +23,17 @@ public class ProceduralTreeRing : MonoBehaviour
     [Range(0.5f, 2f)] public float scaleMax = 1.3f;
     public int randomSeed = 42;
 
-    [Header("Tree prefab")]
-    public GameObject treePrefab;
+    [Header("Tree prefabs (one is picked at random per spawn)")]
+    public GameObject[] treePrefabs;
+
+    [Tooltip("If the prefab uses the Tree Creator legacy component, assign the mesh sub-asset to the MeshFilter at instantiation.")]
+    public bool fixLegacyTreeMesh = true;
+
+    [Header("Material overrides (optional - for URP compatibility)")]
+    [Tooltip("If set, replaces material slot 0 (typically bark) after instantiation.")]
+    public Material barkMaterialOverride;
+    [Tooltip("If set, replaces material slot 1 (typically leaves) after instantiation.")]
+    public Material leafMaterialOverride;
 
     [Header("Editor")]
     public bool regenerateOnValidate = true;
@@ -43,7 +52,7 @@ public class ProceduralTreeRing : MonoBehaviour
     {
         ClearChildren();
 
-        if (treePrefab == null)
+        if (treePrefabs == null || treePrefabs.Length == 0)
         {
             return;
         }
@@ -75,7 +84,7 @@ public class ProceduralTreeRing : MonoBehaviour
             float scale = Mathf.Lerp(scaleMin, scaleMax, (float)rng.NextDouble());
             float rotY = (float)rng.NextDouble() * 360f;
 
-            CreateTree(i, finalPos, scale, rotY);
+            CreateTree(i, finalPos, scale, rotY, rng);
         }
     }
 
@@ -93,26 +102,71 @@ public class ProceduralTreeRing : MonoBehaviour
         }
     }
 
-    private void CreateTree(int index, Vector3 pos, float scale, float rotY)
+    private void CreateTree(int index, Vector3 pos, float scale, float rotY, System.Random rng)
     {
+        var prefab = treePrefabs[rng.Next(treePrefabs.Length)];
+
         GameObject tree;
 #if UNITY_EDITOR
         if (!Application.isPlaying)
         {
-            tree = (GameObject)PrefabUtility.InstantiatePrefab(treePrefab, transform);
+            tree = (GameObject)PrefabUtility.InstantiatePrefab(prefab, transform);
         }
         else
         {
-            tree = Instantiate(treePrefab, transform);
+            tree = Instantiate(prefab, transform);
         }
 #else
-        tree = Instantiate(treePrefab, transform);
+        tree = Instantiate(prefab, transform);
 #endif
         tree.name = $"Tree_{index:D3}";
         tree.transform.localPosition = pos;
         tree.transform.localRotation = Quaternion.Euler(0f, rotY, 0f);
         tree.transform.localScale = Vector3.one * scale;
+
+        if (fixLegacyTreeMesh)
+        {
+            AssignLegacyTreeMesh(prefab, tree);
+        }
+
+        if (barkMaterialOverride != null || leafMaterialOverride != null)
+        {
+            ApplyMaterialOverrides(tree);
+        }
     }
+
+    private void ApplyMaterialOverrides(GameObject tree)
+    {
+        var renderer = tree.GetComponent<MeshRenderer>();
+        if (renderer == null) return;
+        var mats = renderer.sharedMaterials;
+        if (mats.Length >= 1 && barkMaterialOverride != null) mats[0] = barkMaterialOverride;
+        if (mats.Length >= 2 && leafMaterialOverride != null) mats[1] = leafMaterialOverride;
+        renderer.sharedMaterials = mats;
+    }
+
+#if UNITY_EDITOR
+    private static void AssignLegacyTreeMesh(GameObject prefab, GameObject instance)
+    {
+        var meshFilter = instance.GetComponent<MeshFilter>();
+        if (meshFilter == null || meshFilter.sharedMesh != null) return;
+
+        string path = AssetDatabase.GetAssetPath(prefab);
+        if (string.IsNullOrEmpty(path)) return;
+
+        var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+        foreach (var a in allAssets)
+        {
+            if (a is Mesh mesh)
+            {
+                meshFilter.sharedMesh = mesh;
+                return;
+            }
+        }
+    }
+#else
+    private static void AssignLegacyTreeMesh(GameObject prefab, GameObject instance) { }
+#endif
 
     private static (Vector3 pos, Vector3 tangent) SampleAt(List<Vector3> perimeter, float target)
     {
