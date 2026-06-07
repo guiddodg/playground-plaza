@@ -15,8 +15,8 @@ MonoBehaviour:
   id: agua
   itemName: Agua
   description: "Una botella de agua fr\xEDa. Recupera energ\xEDa."
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 45c47047e86adda4d8315bfd10bd1090, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: dde8cf836bc7e644eb0fdd8aea5dc2c1, type: 3}
   itemType: 1
   equipSlot: 0
   isStackable: 1
