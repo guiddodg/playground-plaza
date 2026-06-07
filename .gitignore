@@ -47,3 +47,6 @@ Crashes/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Temp Blender preview renders (item modeling workflow)
+/render_*.png

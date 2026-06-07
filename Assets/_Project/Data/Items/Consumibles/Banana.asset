@@ -15,8 +15,8 @@ MonoBehaviour:
   id: banana
   itemName: Banana
   description: "Una banana. Recupera bastante energ\xEDa."
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 2212a480a1f3e294886524e071f66243, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: 546337a17e0f50044881ac952ee9b8e8, type: 3}
   itemType: 1
   equipSlot: 0
   isStackable: 1
