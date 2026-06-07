@@ -15,8 +15,8 @@ MonoBehaviour:
   id: manzana
   itemName: Manzana
   description: "Una manzana fresca. Recupera energ\xEDa."
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: c86866f6f03bed64e97ddc38bfc5fe96, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: 436e573f2cc14e447ae4bd63873c0f88, type: 3}
   itemType: 1
   equipSlot: 0
   isStackable: 1
