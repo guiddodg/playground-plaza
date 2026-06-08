@@ -15,8 +15,8 @@ MonoBehaviour:
   id: gorra_batman
   itemName: Gorra Batman
   description: La gorra del Caballero Oscuro.
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 7b71080324eec7e4c99109761d31b765, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: d888d62e3e2f3ec4488dff0a8b3a315c, type: 3}
   itemType: 0
   equipSlot: 1
   isStackable: 0
