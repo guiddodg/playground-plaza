@@ -15,8 +15,8 @@ MonoBehaviour:
   id: gorra_superman
   itemName: Gorra Superman
   description: La gorra del Hombre de Acero.
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: a04fa42f7516fc34aa7d3fb4799fb349, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: aad6360684761d74b945d1a48e9ad652, type: 3}
   itemType: 0
   equipSlot: 1
   isStackable: 0
