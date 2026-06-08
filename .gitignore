@@ -50,3 +50,8 @@ Thumbs.db
 
 # Temp Blender preview renders (item modeling workflow)
 /render_*.png
+# Reference images downloaded while modeling items
+/ref_*.jpg
+/ref_*.jpeg
+/ref_*.png
+/ref_*.webp
