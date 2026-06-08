@@ -15,8 +15,8 @@ MonoBehaviour:
   id: coca_cola
   itemName: Coca-Cola
   description: "Una Coca-Cola helada. Recupera mucha energ\xEDa."
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: b28ff1ff6308aa449ba019c791dc47f1, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: d1211b940aa53b641bd7a14dffb1209b, type: 3}
   itemType: 1
   equipSlot: 0
   isStackable: 1
