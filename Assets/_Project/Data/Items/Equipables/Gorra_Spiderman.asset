@@ -15,8 +15,8 @@ MonoBehaviour:
   id: gorra_spiderman
   itemName: Gorra Spiderman
   description: "La gorra del Hombre Ara\xF1a."
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4c60cf83244ba004eb1b79b32708c336, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: 9ca0a6cbf4326bb4793f448a82e90166, type: 3}
   itemType: 0
   equipSlot: 1
   isStackable: 0
