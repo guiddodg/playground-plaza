@@ -15,8 +15,8 @@ MonoBehaviour:
   id: estrella
   itemName: Estrella
   description: "Una estrella escondida en la plaza. \xA1Col\xE9ccionalas todas!"
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4b4b453b9f35e824da858ea48c770cc3, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: a592b82a6f6967447bf74640b0b753f7, type: 3}
   itemType: 2
   equipSlot: 0
   isStackable: 1
