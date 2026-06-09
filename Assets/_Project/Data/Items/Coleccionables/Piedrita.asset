@@ -15,8 +15,8 @@ MonoBehaviour:
   id: piedrita
   itemName: Piedrita
   description: Una piedrita del parque. Sirve para craftear.
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: f728a80d321a6e94cbff68ef94d979fe, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: 3b9916fb49cb6c94aa79ccd368be324e, type: 3}
   itemType: 2
   equipSlot: 0
   isStackable: 1
