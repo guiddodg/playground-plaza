@@ -15,8 +15,8 @@ MonoBehaviour:
   id: balde
   itemName: Balde
   description: Un baldecito para el arenero.
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: f0bba0c408e3d7c4184a23c0ada51be9, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: 23f4d22f64bda474dbbac789609ed59d, type: 3}
   itemType: 0
   equipSlot: 3
   isStackable: 0
