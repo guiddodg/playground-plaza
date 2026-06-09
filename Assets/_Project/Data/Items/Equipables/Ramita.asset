@@ -15,8 +15,8 @@ MonoBehaviour:
   id: ramita
   itemName: Ramita
   description: Una ramita del parque. Sirve para jugar y para craftear.
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8f2ba93936847d5409a408e594111e84, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: 4a8f14231e6150549910a52111de28b4, type: 3}
   itemType: 0
   equipSlot: 3
   isStackable: 1
