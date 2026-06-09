@@ -15,8 +15,8 @@ MonoBehaviour:
   id: palita
   itemName: Palita
   description: Una palita para el arenero.
-  icon: {fileID: 0}
-  prefab: {fileID: 0}
+  icon: {fileID: 21300000, guid: 3162af01727d34e4d89c968ffd5823f8, type: 3}
+  prefab: {fileID: 8771091787928289351, guid: 93cecc579040b48469f6c20249ce4e27, type: 3}
   itemType: 0
   equipSlot: 3
   isStackable: 0
