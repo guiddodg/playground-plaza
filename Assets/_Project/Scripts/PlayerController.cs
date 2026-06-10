@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour
         float h = 0f, v = 0f;
         bool isRunning = false;
         bool jumpPressed = false;
-        if (kb != null)
+        if (kb != null && !GameplayInputLock.Locked)
         {
             if (kb.wKey.isPressed || kb.upArrowKey.isPressed)    v += 1f;
             if (kb.sKey.isPressed || kb.downArrowKey.isPressed)  v -= 1f;

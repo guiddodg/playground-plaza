@@ -49,7 +49,8 @@ public class CameraOrbitInput : MonoBehaviour
         if (target == null) return;
 
         var mouse = Mouse.current;
-        bool isRotating = !requireRightMouse || (mouse != null && mouse.rightButton.isPressed);
+        bool isRotating = !GameplayInputLock.Locked &&
+                          (!requireRightMouse || (mouse != null && mouse.rightButton.isPressed));
 
         if (isRotating != wasRotating)
         {

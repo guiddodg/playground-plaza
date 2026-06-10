@@ -55,3 +55,12 @@ Thumbs.db
 /ref_*.jpeg
 /ref_*.png
 /ref_*.webp
+
+# Dev tooling: PIL asset/UI generators + python cache (regenerate sprites locally)
+/gen_*.py
+/__pycache__/
+# Unity screenshot tool output
+/Assets/[Ss]creenshots/
+/Assets/[Ss]creenshots.meta
+# Stray reference drops in project root
+/5wvm9sdh.jpg
