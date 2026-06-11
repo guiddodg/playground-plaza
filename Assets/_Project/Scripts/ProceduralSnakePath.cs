@@ -31,6 +31,17 @@ public class ProceduralSnakePath : MonoBehaviour
 
     private void OnEnable() => Generate();
 
+    // Destroy the procedural mesh before a domain reload / disable, otherwise the
+    // unreferenced native Mesh leaks (it's recreated fresh in OnEnable anyway).
+    private void OnDisable() => ReleaseMesh();
+
+    private void ReleaseMesh()
+    {
+        if (mesh == null) return;
+        if (Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh);
+        mesh = null;
+    }
+
 #if UNITY_EDITOR
     private void OnValidate()
     {
@@ -48,8 +59,10 @@ public class ProceduralSnakePath : MonoBehaviour
         {
             mesh = new Mesh { name = "SnakePath (procedural)" };
             // Procedural mesh: never serialize it into the scene. OnEnable rebuilds
-            // it in every context, so a saved copy only churned the .unity.
-            mesh.hideFlags = HideFlags.DontSave;
+            // it in every context, so a saved copy only churned the .unity. Note we
+            // do NOT use HideFlags.DontSave here: it includes DontUnloadUnusedAsset,
+            // which would pin every regenerated mesh in memory and leak on reloads.
+            mesh.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
         }
         else mesh.Clear();
 
