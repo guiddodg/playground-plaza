@@ -35,6 +35,9 @@ public class ProceduralPlazaShape : MonoBehaviour
         if (mesh == null)
         {
             mesh = new Mesh { name = "PlazaShape (procedural)" };
+            // Procedural mesh: never serialize it into the scene. OnEnable rebuilds
+            // it in every context, so a saved copy only churned the .unity.
+            mesh.hideFlags = HideFlags.DontSave;
         }
         else
         {

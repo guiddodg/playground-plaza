@@ -68,6 +68,13 @@ public class ProceduralFence : MonoBehaviour
                 CreateRail($"Rail_{i:D3}_{r}", a, b, t * postHeight);
             }
         }
+
+        // Generated geometry is preview/runtime-only: keep it out of the saved
+        // scene so the .unity stays small and deterministic. OnEnable regenerates
+        // it in every context (editor preview, play, build), so the serialized
+        // copies were dead weight that churned the scene on each save.
+        foreach (Transform child in transform)
+            child.gameObject.hideFlags = HideFlags.DontSave;
     }
 
     private void ClearChildren()
