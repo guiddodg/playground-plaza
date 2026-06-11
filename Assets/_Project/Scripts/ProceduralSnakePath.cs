@@ -44,7 +44,13 @@ public class ProceduralSnakePath : MonoBehaviour
         if (waypoints == null || waypoints.Length < 2) return;
 
         var meshFilter = GetComponent<MeshFilter>();
-        if (mesh == null) mesh = new Mesh { name = "SnakePath (procedural)" };
+        if (mesh == null)
+        {
+            mesh = new Mesh { name = "SnakePath (procedural)" };
+            // Procedural mesh: never serialize it into the scene. OnEnable rebuilds
+            // it in every context, so a saved copy only churned the .unity.
+            mesh.hideFlags = HideFlags.DontSave;
+        }
         else mesh.Clear();
 
         List<Vector3> centerLine = BuildCatmullRomPath(waypoints, subdivisionsPerSegment);
