@@ -93,8 +93,12 @@ public class NotificationFeed : MonoBehaviour
         var row = go.AddComponent<NotificationRow>();
         row.Play(cg, lifetime, fadeDuration);
 
-        // Drop the oldest rows beyond the cap.
-        while (container.childCount > maxVisible)
-            Destroy(container.GetChild(container.childCount - 1).gameObject);
+        // Drop the oldest rows beyond the cap. Destroy() is deferred — childCount
+        // doesn't drop until end of frame — so iterate a FIXED count and offset the
+        // index. A `while (childCount > max)` here loops forever (Destroy never
+        // lowers childCount this frame), spinning the CPU and leaking until OOM.
+        int overflow = container.childCount - maxVisible;
+        for (int i = 0; i < overflow; i++)
+            Destroy(container.GetChild(container.childCount - 1 - i).gameObject);
     }
 }
