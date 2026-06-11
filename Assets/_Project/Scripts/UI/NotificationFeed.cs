@@ -30,6 +30,15 @@ public class NotificationFeed : MonoBehaviour
     {
         if (Instance != null && Instance != this) { enabled = false; return; }
         Instance = this;
+
+        // Safety: a ContentSizeFitter on the container (combined with dynamically
+        // added rows) caused a layout-rebuild loop that hung the editor. Rows are a
+        // fixed size now, so the fitter is unnecessary — disable it if present.
+        if (container != null)
+        {
+            var fitter = container.GetComponent<ContentSizeFitter>();
+            if (fitter != null) fitter.enabled = false;
+        }
     }
 
     private void OnDestroy()
@@ -56,8 +65,13 @@ public class NotificationFeed : MonoBehaviour
 
         var cg = go.AddComponent<CanvasGroup>();
 
+        // Fixed row height. Driving height from text content (auto-size / wrap)
+        // plus a ContentSizeFitter on the container created a layout-rebuild loop
+        // that hung the editor, so rows are a fixed size and text never wraps.
+        float rowHeight = fontSize + 16;
         var le = go.AddComponent<LayoutElement>();
-        le.minHeight = fontSize + 16;
+        le.minHeight = rowHeight;
+        le.preferredHeight = rowHeight;
 
         var txtGo = new GameObject("Label", typeof(RectTransform));
         txtGo.transform.SetParent(go.transform, false);
@@ -66,7 +80,8 @@ public class NotificationFeed : MonoBehaviour
         tmp.color = textColor;
         tmp.fontSize = fontSize;
         tmp.alignment = TextAlignmentOptions.MidlineLeft;
-        tmp.enableWordWrapping = true;
+        tmp.enableWordWrapping = false;
+        tmp.overflowMode = TextOverflowModes.Ellipsis;
         var trt = tmp.rectTransform;
         trt.anchorMin = Vector2.zero;
         trt.anchorMax = Vector2.one;
