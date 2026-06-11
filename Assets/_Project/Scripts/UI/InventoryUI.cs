@@ -70,7 +70,12 @@ public class InventoryUI : MonoBehaviour
     {
         var kb = Keyboard.current;
         if (kb != null && kb[toggleKey].wasPressedThisFrame)
-            SetOpen(!isOpen);
+        {
+            // Read the panel's real state so the toggle stays in sync even if it
+            // was closed another way (e.g. the on-screen close button).
+            bool currentlyOpen = panelRoot != null && panelRoot.activeSelf;
+            SetOpen(!currentlyOpen);
+        }
     }
 
     private void Bind()
@@ -140,14 +145,8 @@ public class InventoryUI : MonoBehaviour
         isOpen = open;
         if (panelRoot != null)
             panelRoot.SetActive(open);
-
-        // Freeze player + camera while the inventory is open, and free the cursor
-        // so the panel can be clicked.
-        GameplayInputLock.SetLocked(open);
-        if (open)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
+        // The input lock + cursor are driven by InventoryInputGate on the panel, so
+        // they stay correct no matter how the panel is shown/hidden (toggle key,
+        // SetOpen, or the on-screen close button calling SetActive directly).
     }
 }
