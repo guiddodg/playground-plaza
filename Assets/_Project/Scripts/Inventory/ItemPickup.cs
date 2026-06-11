@@ -49,6 +49,7 @@ public class ItemPickup : MonoBehaviour, IInteractable
 
         inventory.AddItem(item, amount);
         onCollected?.Invoke();
+        NotificationFeed.Post(amount > 1 ? $"Recogiste {item.itemName} x{amount}" : $"Recogiste {item.itemName}");
 
         gameObject.SetActive(false);
         Destroy(gameObject);
