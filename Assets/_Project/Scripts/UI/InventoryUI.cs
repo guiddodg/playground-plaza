@@ -4,9 +4,15 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Builds the inventory grid in the sticker/candy UI style. Instantiates one
-/// <see cref="InventorySlotUI"/> per entry inside a GridLayoutGroup, and lets
-/// the player toggle the wood-framed panel open/closed. While open it engages
+/// <see cref="InventorySlotUI"/> per slot inside a GridLayoutGroup, and lets the
+/// player toggle the wood-framed panel open/closed. While open it engages
 /// <see cref="GameplayInputLock"/> so the player and camera stay frozen.
+///
+/// The grid is a view over the runtime <see cref="PlayerInventory"/>: it reads
+/// from the model and re-renders whenever the model raises
+/// <see cref="PlayerInventory.OnChanged"/>. The <see cref="entries"/> list is
+/// only a debug seed pushed into the model on start, so the inventory can be
+/// pre-populated for testing in the Editor.
 /// </summary>
 public class InventoryUI : MonoBehaviour
 {
@@ -21,13 +27,18 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private Transform slotContainer;
     [SerializeField] private InventorySlotUI slotPrefab;
+    [Tooltip("Inventory model to display. If left empty, PlayerInventory.Instance is used.")]
+    [SerializeField] private PlayerInventory inventory;
 
     [Header("Layout")]
-    [Tooltip("Total slots to draw. Empty slots beyond the item count render blank.")]
+    [Tooltip("Minimum slots to draw. The grid grows if the inventory holds more stacks.")]
     [SerializeField] private int slotCount = 12;
 
-    [Header("Contents")]
+    [Header("Debug seed")]
+    [Tooltip("Items pushed into the inventory model on Start (editor testing). The model is the source of truth, not this list.")]
     [SerializeField] private List<Entry> entries = new List<Entry>();
+    [Tooltip("If true, the entries above are added to the inventory on Start.")]
+    [SerializeField] private bool seedEntriesOnStart = true;
 
     [Header("Input")]
     [Tooltip("Key that toggles the inventory open/closed (new Input System).")]
@@ -36,12 +47,23 @@ public class InventoryUI : MonoBehaviour
 
     private readonly List<InventorySlotUI> slots = new List<InventorySlotUI>();
     private bool isOpen;
+    private PlayerInventory bound;
+
+    /// <summary>The inventory this UI reflects: the explicit ref, else the singleton.</summary>
+    private PlayerInventory Inv => inventory != null ? inventory : PlayerInventory.Instance;
 
     private void Start()
     {
         BuildSlots();
+        Bind();
         Refresh();
         SetOpen(startOpen);
+    }
+
+    private void OnDestroy()
+    {
+        if (bound != null)
+            bound.OnChanged -= Refresh;
     }
 
     private void Update()
@@ -49,6 +71,20 @@ public class InventoryUI : MonoBehaviour
         var kb = Keyboard.current;
         if (kb != null && kb[toggleKey].wasPressedThisFrame)
             SetOpen(!isOpen);
+    }
+
+    private void Bind()
+    {
+        bound = Inv;
+        if (bound == null)
+            return;
+
+        // Push the debug seed into the model, then re-render on every change.
+        if (seedEntriesOnStart)
+            foreach (var e in entries)
+                if (e.item != null) bound.AddItem(e.item, e.count);
+
+        bound.OnChanged += Refresh;
     }
 
     public void BuildSlots()
@@ -60,7 +96,8 @@ public class InventoryUI : MonoBehaviour
             if (s != null) Destroy(s.gameObject);
         slots.Clear();
 
-        int total = Mathf.Max(slotCount, entries.Count);
+        int modelCount = Inv != null ? Inv.Slots.Count : entries.Count;
+        int total = Mathf.Max(slotCount, modelCount);
         for (int i = 0; i < total; i++)
         {
             var slot = Instantiate(slotPrefab, slotContainer);
@@ -71,12 +108,30 @@ public class InventoryUI : MonoBehaviour
 
     public void Refresh()
     {
+        var inv = Inv;
+
+        // Grow the grid if the model now holds more stacks than we have slots for.
+        if (inv != null && inv.Slots.Count > slots.Count)
+            BuildSlots();
+
         for (int i = 0; i < slots.Count; i++)
         {
-            if (i < entries.Count && entries[i].item != null)
-                slots[i].SetItem(entries[i].item, entries[i].count);
+            if (inv != null)
+            {
+                if (i < inv.Slots.Count && inv.Slots[i].item != null)
+                    slots[i].SetItem(inv.Slots[i].item, inv.Slots[i].count);
+                else
+                    slots[i].Clear();
+            }
             else
-                slots[i].Clear();
+            {
+                // No model in the scene (e.g. previewing the panel alone): fall
+                // back to the raw seed list so the grid isn't blank.
+                if (i < entries.Count && entries[i].item != null)
+                    slots[i].SetItem(entries[i].item, entries[i].count);
+                else
+                    slots[i].Clear();
+            }
         }
     }
 
