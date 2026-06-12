@@ -3510,6 +3510,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SafetyZone_Carousel
       objectReference: {fileID: 0}
+    - target: {fileID: 7128096615847470808, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7445623199012084324, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_LocalScale.x
       value: 5
@@ -4065,6 +4069,10 @@ PrefabInstance:
     - target: {fileID: 3122760209651465030, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_Name
       value: SafetyZone_Hamacas_2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7128096615847470808, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7445623199012084324, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_LocalScale.x
@@ -5890,6 +5898,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SafetyZone_Climbing_1
       objectReference: {fileID: 0}
+    - target: {fileID: 7128096615847470808, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7445623199012084324, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_LocalScale.x
       value: 8.445318
@@ -6489,6 +6501,10 @@ PrefabInstance:
     - target: {fileID: 3122760209651465030, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_Name
       value: SafetyZone_Slide
+      objectReference: {fileID: 0}
+    - target: {fileID: 7128096615847470808, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7445623199012084324, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_LocalScale.x
@@ -7783,6 +7799,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SafetyZone_Climbing_2
       objectReference: {fileID: 0}
+    - target: {fileID: 7128096615847470808, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7445623199012084324, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_LocalScale.x
       value: 8.708508
@@ -7852,6 +7872,10 @@ PrefabInstance:
     - target: {fileID: 3122760209651465030, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_Name
       value: SafetyZone_Hamacas_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7128096615847470808, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7445623199012084324, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_LocalScale.x
@@ -8771,6 +8795,10 @@ PrefabInstance:
     - target: {fileID: 3122760209651465030, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_Name
       value: SafetyZone_Seesaw
+      objectReference: {fileID: 0}
+    - target: {fileID: 7128096615847470808, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7445623199012084324, guid: 1595e6e1e9b3a344f84ab04203b1e51a, type: 3}
       propertyPath: m_LocalScale.x
@@ -11670,6 +11698,10 @@ PrefabInstance:
     - target: {fileID: 3558034450164846813, guid: 05b5856008e6e394e9ef8a7ec13c68a5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6080320585365163442, guid: 05b5856008e6e394e9ef8a7ec13c68a5, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
