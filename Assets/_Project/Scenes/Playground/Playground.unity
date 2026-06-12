@@ -521,6 +521,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f2bfbaaf11845eb46990b79aa26a9d88, type: 3}
       insertIndex: -1
       addedObject: {fileID: 156894954}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f2bfbaaf11845eb46990b79aa26a9d88, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 156894956}
   m_SourcePrefab: {fileID: 100100000, guid: f2bfbaaf11845eb46990b79aa26a9d88, type: 3}
 --- !u!4 &156894948 stripped
 Transform:
@@ -612,6 +615,21 @@ MonoBehaviour:
     m_Bits: 512
   interactKey: 20
   reticle: {fileID: 518136854}
+--- !u!114 &156894956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 156894949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 881efc3599b87be4eab37e86d6d536b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CraftingSystem
+  inventory: {fileID: 0}
+  knownRecipes:
+  - {fileID: 11400000, guid: b6af248677683934987ff1716441036e, type: 2}
 --- !u!1 &175703587
 GameObject:
   m_ObjectHideFlags: 0
