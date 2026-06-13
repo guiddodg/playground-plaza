@@ -5,48 +5,54 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Crafting screen: one row per known recipe, showing the result and the
-/// ingredients you have vs need. A row is clickable (crafts) only when all
-/// ingredients are available. Opened by a <see cref="CraftingStation"/>. The
-/// panel's <c>InventoryInputGate</c> handles the input lock by visibility.
+/// Full-screen crafting screen in the Animal Crossing DIY style: a grid of recipe
+/// cards on the left and a detail panel on the right (result icon + name, the
+/// required materials with have/need counts, and a craft button). Opened by the
+/// <see cref="CraftingStation"/>; the panel's input gate handles the lock.
 ///
-/// Rows are built once from <see cref="CraftingSystem.KnownRecipes"/> and only
-/// re-styled on refresh (no per-frame create/destroy), and the grid uses fixed
-/// row heights with no content-driven sizing to avoid layout-rebuild loops.
+/// Cards and material rows are built dynamically but with fixed sizes and no
+/// content-driven fitters, to avoid layout-rebuild loops. Material rows are
+/// rebuilt only when the selection changes; counts/colors refresh in place.
 /// </summary>
 public class CraftingUI : MonoBehaviour
 {
-    private class Row
-    {
-        public RecipeData recipe;
-        public Button button;
-        public Image background;
-        public TMP_Text label;
-    }
+    private class Card { public RecipeData recipe; public Button button; public Image frame; }
+    private class MatRow { public ItemData item; public int need; public TMP_Text countText; }
 
     [Header("References")]
     [SerializeField] private GameObject panelRoot;
-    [SerializeField] private RectTransform rowContainer;
-    [Tooltip("Crafting system to read recipes from. If empty, CraftingSystem.Instance is used.")]
+    [SerializeField] private RectTransform gridContainer;
     [SerializeField] private CraftingSystem crafting;
 
-    [Header("Row style")]
-    [SerializeField] private Color craftableColor = new Color(0.27f, 0.62f, 0.30f, 0.92f);
-    [SerializeField] private Color blockedColor = new Color(0.45f, 0.45f, 0.50f, 0.85f);
-    [SerializeField] private Color textColor = Color.white;
-    [SerializeField, Min(8)] private int fontSize = 24;
+    [Header("Detail panel")]
+    [SerializeField] private Image detailIcon;
+    [SerializeField] private TMP_Text detailName;
+    [SerializeField] private RectTransform materialsContainer;
+    [SerializeField] private Button craftButton;
+    [SerializeField] private TMP_Text craftButtonLabel;
 
-    private readonly List<Row> rows = new List<Row>();
-    private CraftingSystem Craft => crafting != null ? crafting : CraftingSystem.Instance;
-    private PlayerInventory boundInventory;
+    [Header("Style")]
+    [SerializeField] private Sprite roundedSprite;
+    [SerializeField] private Color cardColor = new Color(1f, 0.99f, 0.94f);
+    [SerializeField] private Color cardSelected = new Color(0.99f, 0.86f, 0.45f);
+    [SerializeField] private Color textColor = new Color(0.36f, 0.29f, 0.20f);
+    [SerializeField] private Color enoughColor = new Color(0.30f, 0.56f, 0.27f);
+    [SerializeField] private Color missingColor = new Color(0.80f, 0.33f, 0.28f);
+    [SerializeField] private int matFontSize = 26;
+
+    private readonly List<Card> cards = new List<Card>();
+    private readonly List<MatRow> matRows = new List<MatRow>();
+    private RecipeData selected;
     private bool built;
+    private PlayerInventory boundInventory;
+
+    private CraftingSystem Craft => crafting != null ? crafting : CraftingSystem.Instance;
 
     private void Start() => SetOpen(false);
 
     private void OnDestroy()
     {
-        if (boundInventory != null)
-            boundInventory.OnChanged -= Refresh;
+        if (boundInventory != null) boundInventory.OnChanged -= Refresh;
     }
 
     public void Open() => SetOpen(true);
@@ -54,96 +60,145 @@ public class CraftingUI : MonoBehaviour
 
     public void SetOpen(bool open)
     {
-        if (open && !built)
-            Build();
-
-        if (panelRoot != null)
-            panelRoot.SetActive(open);
-
+        if (open && !built) Build();
+        if (panelRoot != null) panelRoot.SetActive(open);
         if (open)
+        {
+            if (selected == null && cards.Count > 0) SelectRecipe(cards[0].recipe);
             Refresh();
+        }
     }
 
     private void Build()
     {
         built = true;
         var sys = Craft;
-        if (sys == null || rowContainer == null)
-            return;
+        if (sys == null) return;
 
-        foreach (var recipe in sys.KnownRecipes)
-            if (recipe != null && recipe.result != null)
-                rows.Add(CreateRow(recipe));
+        if (gridContainer != null)
+            foreach (var recipe in sys.KnownRecipes)
+                if (recipe != null && recipe.result != null)
+                    cards.Add(CreateCard(recipe));
+
+        if (craftButton != null)
+            craftButton.onClick.AddListener(CraftSelected);
 
         boundInventory = PlayerInventory.Instance;
-        if (boundInventory != null)
-            boundInventory.OnChanged += Refresh;
+        if (boundInventory != null) boundInventory.OnChanged += Refresh;
     }
 
-    private Row CreateRow(RecipeData recipe)
+    private Card CreateCard(RecipeData recipe)
     {
-        var go = new GameObject("Recipe", typeof(RectTransform));
-        go.transform.SetParent(rowContainer, false);
+        var go = new GameObject("Card", typeof(RectTransform));
+        go.transform.SetParent(gridContainer, false);
+        var frame = go.AddComponent<Image>();
+        frame.sprite = roundedSprite; frame.type = Image.Type.Sliced; frame.color = cardColor;
+        var btn = go.AddComponent<Button>();
+        btn.targetGraphic = frame;
 
-        var bg = go.AddComponent<Image>();
+        var iconGo = new GameObject("Icon", typeof(RectTransform));
+        iconGo.transform.SetParent(go.transform, false);
+        var icon = iconGo.AddComponent<Image>();
+        icon.sprite = recipe.result.icon;
+        icon.preserveAspect = true;
+        icon.enabled = recipe.result.icon != null;
+        var irt = icon.rectTransform;
+        irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
+        irt.offsetMin = new Vector2(10f, 10f); irt.offsetMax = new Vector2(-10f, -10f);
 
-        var le = go.AddComponent<LayoutElement>();
-        le.minHeight = fontSize + 22;
-        le.preferredHeight = fontSize + 22;
+        var card = new Card { recipe = recipe, button = btn, frame = frame };
+        btn.onClick.AddListener(() => SelectRecipe(card.recipe));
+        return card;
+    }
 
-        var button = go.AddComponent<Button>();
-        button.targetGraphic = bg;
-        button.onClick.AddListener(() =>
+    private void SelectRecipe(RecipeData recipe)
+    {
+        selected = recipe;
+
+        // highlight the selected card
+        foreach (var c in cards)
+            if (c.frame != null) c.frame.color = (c.recipe == recipe) ? cardSelected : cardColor;
+
+        // detail header
+        if (detailName != null) detailName.text = recipe != null ? recipe.result.itemName : "";
+        if (detailIcon != null)
         {
-            if (Craft != null && Craft.Craft(recipe))
-                Refresh();
-        });
+            detailIcon.sprite = recipe != null ? recipe.result.icon : null;
+            detailIcon.enabled = recipe != null && recipe.result.icon != null;
+            detailIcon.preserveAspect = true;
+        }
 
-        var labelGo = new GameObject("Label", typeof(RectTransform));
-        labelGo.transform.SetParent(go.transform, false);
-        var tmp = labelGo.AddComponent<TextMeshProUGUI>();
-        tmp.color = textColor;
-        tmp.fontSize = fontSize;
-        tmp.alignment = TextAlignmentOptions.MidlineLeft;
-        tmp.enableWordWrapping = false;
+        BuildMaterials(recipe);
+        Refresh();
+    }
+
+    private void BuildMaterials(RecipeData recipe)
+    {
+        // clear current rows (fixed-count loop over our list, never a childCount while)
+        foreach (var r in matRows)
+            if (r.countText != null) Destroy(r.countText.transform.parent.gameObject);
+        matRows.Clear();
+        if (recipe == null || materialsContainer == null) return;
+
+        foreach (var ing in recipe.ingredients)
+        {
+            if (ing.item == null) continue;
+            matRows.Add(CreateMatRow(ing.item, ing.count));
+        }
+    }
+
+    private MatRow CreateMatRow(ItemData item, int need)
+    {
+        var go = new GameObject("Material", typeof(RectTransform));
+        go.transform.SetParent(materialsContainer, false);
+        var le = go.AddComponent<LayoutElement>();
+        le.minHeight = matFontSize + 22; le.preferredHeight = matFontSize + 22;
+
+        var icon = new GameObject("Icon", typeof(RectTransform));
+        icon.transform.SetParent(go.transform, false);
+        var img = icon.AddComponent<Image>();
+        img.sprite = item.icon; img.preserveAspect = true; img.enabled = item.icon != null;
+        var irt = img.rectTransform;
+        irt.anchorMin = new Vector2(0f, 0.5f); irt.anchorMax = new Vector2(0f, 0.5f);
+        irt.pivot = new Vector2(0f, 0.5f);
+        irt.sizeDelta = new Vector2(matFontSize + 14, matFontSize + 14);
+        irt.anchoredPosition = new Vector2(6f, 0f);
+
+        var label = new GameObject("Label", typeof(RectTransform));
+        label.transform.SetParent(go.transform, false);
+        var tmp = label.AddComponent<TextMeshProUGUI>();
+        tmp.fontSize = matFontSize; tmp.color = textColor;
+        tmp.alignment = TextAlignmentOptions.MidlineLeft; tmp.enableWordWrapping = false;
         tmp.overflowMode = TextOverflowModes.Ellipsis;
-        var trt = tmp.rectTransform;
-        trt.anchorMin = Vector2.zero;
-        trt.anchorMax = Vector2.one;
-        trt.offsetMin = new Vector2(16f, 2f);
-        trt.offsetMax = new Vector2(-16f, -2f);
+        var lrt = tmp.rectTransform;
+        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+        lrt.offsetMin = new Vector2(matFontSize + 28, 0f); lrt.offsetMax = new Vector2(-8f, 0f);
 
-        return new Row { recipe = recipe, button = button, background = bg, label = tmp };
+        return new MatRow { item = item, need = need, countText = tmp };
     }
 
     public void Refresh()
     {
-        var sys = Craft;
-        foreach (var row in rows)
+        var inv = boundInventory != null ? boundInventory : PlayerInventory.Instance;
+
+        foreach (var r in matRows)
         {
-            bool can = sys != null && sys.CanCraft(row.recipe);
-            if (row.button != null) row.button.interactable = can;
-            if (row.background != null) row.background.color = can ? craftableColor : blockedColor;
-            if (row.label != null) row.label.text = BuildLabel(row.recipe);
+            int have = inv != null ? inv.CountOf(r.item) : 0;
+            if (r.countText != null)
+            {
+                r.countText.text = r.item.itemName + "   " + have + " / " + r.need;
+                r.countText.color = have >= r.need ? enoughColor : missingColor;
+            }
         }
+
+        bool can = selected != null && Craft != null && Craft.CanCraft(selected);
+        if (craftButton != null) craftButton.interactable = can;
+        if (craftButtonLabel != null) craftButtonLabel.text = can ? "CRAFTEAR" : "FALTAN MATERIALES";
     }
 
-    private string BuildLabel(RecipeData recipe)
+    private void CraftSelected()
     {
-        var sb = new StringBuilder();
-        sb.Append(recipe.result.itemName);
-        if (recipe.resultCount > 1) sb.Append(" x").Append(recipe.resultCount);
-        sb.Append("   ←   ");
-
-        bool first = true;
-        foreach (var ing in recipe.ingredients)
-        {
-            if (ing.item == null) continue;
-            if (!first) sb.Append(",  ");
-            first = false;
-            int have = boundInventory != null ? boundInventory.CountOf(ing.item) : 0;
-            sb.Append(ing.item.itemName).Append(" ").Append(have).Append("/").Append(ing.count);
-        }
-        return sb.ToString();
+        if (selected != null && Craft != null && Craft.Craft(selected))
+            Refresh();
     }
 }
