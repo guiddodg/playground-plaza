@@ -32,9 +32,8 @@ public class CraftingUI : MonoBehaviour
     [SerializeField] private TMP_Text craftButtonLabel;
 
     [Header("Style")]
-    [SerializeField] private Sprite roundedSprite;
-    [SerializeField] private Color cardColor = new Color(1f, 0.99f, 0.94f);
-    [SerializeField] private Color cardSelected = new Color(0.99f, 0.86f, 0.45f);
+    [SerializeField] private Sprite cardSprite;
+    [SerializeField] private Sprite cardSelectedSprite;
     [SerializeField] private Color textColor = new Color(0.36f, 0.29f, 0.20f);
     [SerializeField] private Color enoughColor = new Color(0.30f, 0.56f, 0.27f);
     [SerializeField] private Color missingColor = new Color(0.80f, 0.33f, 0.28f);
@@ -92,7 +91,7 @@ public class CraftingUI : MonoBehaviour
         var go = new GameObject("Card", typeof(RectTransform));
         go.transform.SetParent(gridContainer, false);
         var frame = go.AddComponent<Image>();
-        frame.sprite = roundedSprite; frame.type = Image.Type.Sliced; frame.color = cardColor;
+        frame.sprite = cardSprite; frame.type = Image.Type.Sliced; frame.color = Color.white;
         var btn = go.AddComponent<Button>();
         btn.targetGraphic = frame;
 
@@ -115,9 +114,9 @@ public class CraftingUI : MonoBehaviour
     {
         selected = recipe;
 
-        // highlight the selected card
+        // highlight the selected card by swapping its frame sprite
         foreach (var c in cards)
-            if (c.frame != null) c.frame.color = (c.recipe == recipe) ? cardSelected : cardColor;
+            if (c.frame != null) c.frame.sprite = (c.recipe == recipe) ? cardSelectedSprite : cardSprite;
 
         // detail header
         if (detailName != null) detailName.text = recipe != null ? recipe.result.itemName : "";
