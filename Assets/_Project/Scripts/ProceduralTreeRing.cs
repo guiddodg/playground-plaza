@@ -35,6 +35,12 @@ public class ProceduralTreeRing : MonoBehaviour
     [Tooltip("If set, replaces material slot 1 (typically leaves) after instantiation.")]
     public Material leafMaterialOverride;
 
+    [Header("Collision")]
+    [Tooltip("Radio del capsule de tronco (espacio local del árbol, escala con el árbol).")]
+    [Min(0.05f)] public float trunkRadius = 0.22f;
+    [Tooltip("Altura del capsule de tronco. Cubre el tronco; el follaje arriba queda caminable.")]
+    [Min(0.2f)] public float trunkHeight = 2.6f;
+
     [Header("Editor")]
     public bool regenerateOnValidate = true;
 
@@ -130,6 +136,14 @@ public class ProceduralTreeRing : MonoBehaviour
         tree.transform.localPosition = pos;
         tree.transform.localRotation = Quaternion.Euler(0f, rotY, 0f);
         tree.transform.localScale = Vector3.one * scale;
+
+        // Trunk collision so the player can't walk through the tree. A thin capsule
+        // over the lower part (scales with the tree); the foliage above stays
+        // walk-through, so you can stand under the canopy.
+        var trunk = tree.AddComponent<CapsuleCollider>();
+        trunk.radius = trunkRadius;
+        trunk.height = trunkHeight;
+        trunk.center = new Vector3(0f, trunkHeight * 0.5f, 0f);
 
         if (fixLegacyTreeMesh)
         {
