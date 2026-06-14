@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -13,11 +12,14 @@ using TMPro;
 /// Cards and material rows are built dynamically but with fixed sizes and no
 /// content-driven fitters, to avoid layout-rebuild loops. Material rows are
 /// rebuilt only when the selection changes; counts/colors refresh in place.
+///
+/// Each material row mimics the AC recipe page: a framed icon slot, the item
+/// name, a dotted leader, and the have/need count inside a rounded count box.
 /// </summary>
 public class CraftingUI : MonoBehaviour
 {
     private class Card { public RecipeData recipe; public Button button; public Image frame; }
-    private class MatRow { public ItemData item; public int need; public TMP_Text countText; }
+    private class MatRow { public ItemData item; public int need; public TMP_Text countText; public Image box; }
 
     [Header("References")]
     [SerializeField] private GameObject panelRoot;
@@ -38,6 +40,14 @@ public class CraftingUI : MonoBehaviour
     [SerializeField] private Color enoughColor = new Color(0.30f, 0.56f, 0.27f);
     [SerializeField] private Color missingColor = new Color(0.80f, 0.33f, 0.28f);
     [SerializeField] private int matFontSize = 26;
+
+    [Header("Style (AC detail rows)")]
+    [SerializeField] private TMP_FontAsset uiFont;
+    [SerializeField] private Sprite slotSprite;
+    [SerializeField] private Sprite countBoxSprite;
+    [SerializeField] private Sprite dotsSprite;
+    [SerializeField] private Color countBoxEnough = new Color(0.55f, 0.74f, 0.42f);
+    [SerializeField] private Color countBoxMissing = new Color(0.96f, 0.60f, 0.25f);
 
     private readonly List<Card> cards = new List<Card>();
     private readonly List<MatRow> matRows = new List<MatRow>();
@@ -91,10 +101,12 @@ public class CraftingUI : MonoBehaviour
         var go = new GameObject("Card", typeof(RectTransform));
         go.transform.SetParent(gridContainer, false);
         var frame = go.AddComponent<Image>();
-        frame.sprite = cardSprite; frame.type = Image.Type.Sliced; frame.color = Color.white;
+        frame.sprite = cardSprite; frame.type = Image.Type.Simple; frame.color = Color.white;
         var btn = go.AddComponent<Button>();
         btn.targetGraphic = frame;
 
+        // The item icon sits in the upper-middle of the card; the printed acorn
+        // pattern and the corner star are baked into the card sprite behind it.
         var iconGo = new GameObject("Icon", typeof(RectTransform));
         iconGo.transform.SetParent(go.transform, false);
         var icon = iconGo.AddComponent<Image>();
@@ -102,8 +114,10 @@ public class CraftingUI : MonoBehaviour
         icon.preserveAspect = true;
         icon.enabled = recipe.result.icon != null;
         var irt = icon.rectTransform;
-        irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
-        irt.offsetMin = new Vector2(10f, 10f); irt.offsetMax = new Vector2(-10f, -10f);
+        irt.anchorMin = new Vector2(0.5f, 0.5f); irt.anchorMax = new Vector2(0.5f, 0.5f);
+        irt.pivot = new Vector2(0.5f, 0.5f);
+        irt.anchoredPosition = new Vector2(0f, 6f);
+        irt.sizeDelta = new Vector2(118f, 118f);
 
         var card = new Card { recipe = recipe, button = btn, frame = frame };
         btn.onClick.AddListener(() => SelectRecipe(card.recipe));
@@ -114,11 +128,9 @@ public class CraftingUI : MonoBehaviour
     {
         selected = recipe;
 
-        // highlight the selected card by swapping its frame sprite
         foreach (var c in cards)
             if (c.frame != null) c.frame.sprite = (c.recipe == recipe) ? cardSelectedSprite : cardSprite;
 
-        // detail header
         if (detailName != null) detailName.text = recipe != null ? recipe.result.itemName : "";
         if (detailIcon != null)
         {
@@ -133,9 +145,13 @@ public class CraftingUI : MonoBehaviour
 
     private void BuildMaterials(RecipeData recipe)
     {
-        // clear current rows (fixed-count loop over our list, never a childCount while)
-        foreach (var r in matRows)
-            if (r.countText != null) Destroy(r.countText.transform.parent.gameObject);
+        // destroy the row container objects we created (fixed-count loop over our
+        // own list, never a childCount while-loop which can spin on deferred Destroy)
+        for (int i = matRows.Count - 1; i >= 0; i--)
+        {
+            var rootGo = RowRoot(matRows[i]);
+            if (rootGo != null) Destroy(rootGo);
+        }
         matRows.Clear();
         if (recipe == null || materialsContainer == null) return;
 
@@ -146,34 +162,90 @@ public class CraftingUI : MonoBehaviour
         }
     }
 
+    // The row root is the slot's grandparent ("Material" container).
+    private GameObject RowRoot(MatRow r)
+    {
+        if (r.box != null) return r.box.transform.parent.gameObject;
+        return null;
+    }
+
     private MatRow CreateMatRow(ItemData item, int need)
     {
+        float rowH = 72f;
         var go = new GameObject("Material", typeof(RectTransform));
         go.transform.SetParent(materialsContainer, false);
         var le = go.AddComponent<LayoutElement>();
-        le.minHeight = matFontSize + 22; le.preferredHeight = matFontSize + 22;
+        le.minHeight = rowH; le.preferredHeight = rowH;
 
-        var icon = new GameObject("Icon", typeof(RectTransform));
-        icon.transform.SetParent(go.transform, false);
-        var img = icon.AddComponent<Image>();
+        // dotted leader line behind, vertically centred
+        if (dotsSprite != null)
+        {
+            var dots = new GameObject("Dots", typeof(RectTransform));
+            dots.transform.SetParent(go.transform, false);
+            var di = dots.AddComponent<Image>();
+            di.sprite = dotsSprite; di.type = Image.Type.Tiled; di.color = new Color(0.55f, 0.47f, 0.33f, 0.7f);
+            var drt = di.rectTransform;
+            drt.anchorMin = new Vector2(0f, 0.5f); drt.anchorMax = new Vector2(1f, 0.5f);
+            drt.pivot = new Vector2(0.5f, 0.5f);
+            // start past where short item names end, ending before the count box,
+            // so it reads as a dotted leader rather than crossing the name.
+            drt.offsetMin = new Vector2(250f, -3f); drt.offsetMax = new Vector2(-96f, 3f);
+        }
+
+        // framed icon slot (left)
+        var slotGo = new GameObject("Slot", typeof(RectTransform));
+        slotGo.transform.SetParent(go.transform, false);
+        var slotImg = slotGo.AddComponent<Image>();
+        slotImg.sprite = slotSprite; slotImg.type = Image.Type.Sliced; slotImg.color = Color.white;
+        var srt = slotImg.rectTransform;
+        srt.anchorMin = new Vector2(0f, 0.5f); srt.anchorMax = new Vector2(0f, 0.5f);
+        srt.pivot = new Vector2(0f, 0.5f);
+        srt.sizeDelta = new Vector2(60f, 60f);
+        srt.anchoredPosition = new Vector2(6f, 0f);
+
+        var iconGo = new GameObject("Icon", typeof(RectTransform));
+        iconGo.transform.SetParent(slotGo.transform, false);
+        var img = iconGo.AddComponent<Image>();
         img.sprite = item.icon; img.preserveAspect = true; img.enabled = item.icon != null;
         var irt = img.rectTransform;
-        irt.anchorMin = new Vector2(0f, 0.5f); irt.anchorMax = new Vector2(0f, 0.5f);
-        irt.pivot = new Vector2(0f, 0.5f);
-        irt.sizeDelta = new Vector2(matFontSize + 14, matFontSize + 14);
-        irt.anchoredPosition = new Vector2(6f, 0f);
+        irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
+        irt.offsetMin = new Vector2(7f, 7f); irt.offsetMax = new Vector2(-7f, -7f);
 
-        var label = new GameObject("Label", typeof(RectTransform));
-        label.transform.SetParent(go.transform, false);
-        var tmp = label.AddComponent<TextMeshProUGUI>();
-        tmp.fontSize = matFontSize; tmp.color = textColor;
-        tmp.alignment = TextAlignmentOptions.MidlineLeft; tmp.enableWordWrapping = false;
-        tmp.overflowMode = TextOverflowModes.Ellipsis;
-        var lrt = tmp.rectTransform;
-        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
-        lrt.offsetMin = new Vector2(matFontSize + 28, 0f); lrt.offsetMax = new Vector2(-8f, 0f);
+        // item name (left, after slot)
+        var nameGo = new GameObject("Name", typeof(RectTransform));
+        nameGo.transform.SetParent(go.transform, false);
+        var nameTmp = nameGo.AddComponent<TextMeshProUGUI>();
+        if (uiFont != null) nameTmp.font = uiFont;
+        nameTmp.text = item.itemName;
+        nameTmp.fontSize = matFontSize; nameTmp.color = textColor;
+        nameTmp.alignment = TextAlignmentOptions.MidlineLeft; nameTmp.enableWordWrapping = false;
+        nameTmp.overflowMode = TextOverflowModes.Ellipsis;
+        var nrt = nameTmp.rectTransform;
+        nrt.anchorMin = new Vector2(0f, 0f); nrt.anchorMax = new Vector2(1f, 1f);
+        nrt.offsetMin = new Vector2(78f, 0f); nrt.offsetMax = new Vector2(-92f, 0f);
 
-        return new MatRow { item = item, need = need, countText = tmp };
+        // count box (right)
+        var boxGo = new GameObject("Count", typeof(RectTransform));
+        boxGo.transform.SetParent(go.transform, false);
+        var box = boxGo.AddComponent<Image>();
+        box.sprite = countBoxSprite; box.type = Image.Type.Sliced; box.color = countBoxMissing;
+        var brt = box.rectTransform;
+        brt.anchorMin = new Vector2(1f, 0.5f); brt.anchorMax = new Vector2(1f, 0.5f);
+        brt.pivot = new Vector2(1f, 0.5f);
+        brt.sizeDelta = new Vector2(84f, 46f);
+        brt.anchoredPosition = new Vector2(-4f, 0f);
+
+        var countGo = new GameObject("Label", typeof(RectTransform));
+        countGo.transform.SetParent(boxGo.transform, false);
+        var countTmp = countGo.AddComponent<TextMeshProUGUI>();
+        if (uiFont != null) countTmp.font = uiFont;
+        countTmp.fontSize = matFontSize; countTmp.color = Color.white;
+        countTmp.alignment = TextAlignmentOptions.Center; countTmp.enableWordWrapping = false;
+        var crt = countTmp.rectTransform;
+        crt.anchorMin = Vector2.zero; crt.anchorMax = Vector2.one;
+        crt.offsetMin = new Vector2(4f, 0f); crt.offsetMax = new Vector2(-4f, -2f);
+
+        return new MatRow { item = item, need = need, countText = countTmp, box = box };
     }
 
     public void Refresh()
@@ -183,11 +255,9 @@ public class CraftingUI : MonoBehaviour
         foreach (var r in matRows)
         {
             int have = inv != null ? inv.CountOf(r.item) : 0;
-            if (r.countText != null)
-            {
-                r.countText.text = r.item.itemName + "   " + have + " / " + r.need;
-                r.countText.color = have >= r.need ? enoughColor : missingColor;
-            }
+            bool ok = have >= r.need;
+            if (r.countText != null) r.countText.text = have + " / " + r.need;
+            if (r.box != null) r.box.color = ok ? countBoxEnough : countBoxMissing;
         }
 
         bool can = selected != null && Craft != null && Craft.CanCraft(selected);
