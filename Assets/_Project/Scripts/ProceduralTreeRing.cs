@@ -97,8 +97,12 @@ public class ProceduralTreeRing : MonoBehaviour
         // scene so the .unity stays small and deterministic. OnEnable regenerates
         // it in every context (editor preview, play, build), so the serialized
         // copies were dead weight that churned the scene on each save.
+        // DontSaveInEditor|DontSaveInBuild (not bare DontSave): consistent with the
+        // other procedural generators. These children are prefab instances (trees),
+        // not generated Mesh assets, so there's no asset leak — but matching flags
+        // avoids the bare-DontSave footgun in scripts that DO create meshes.
         foreach (Transform child in transform)
-            child.gameObject.hideFlags = HideFlags.DontSave;
+            child.gameObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
     }
 
     private void ClearChildren()

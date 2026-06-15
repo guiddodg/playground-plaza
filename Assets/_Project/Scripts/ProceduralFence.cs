@@ -73,8 +73,13 @@ public class ProceduralFence : MonoBehaviour
         // scene so the .unity stays small and deterministic. OnEnable regenerates
         // it in every context (editor preview, play, build), so the serialized
         // copies were dead weight that churned the scene on each save.
+        // Use DontSaveInEditor|DontSaveInBuild (not bare DontSave): consistent with
+        // the other procedural generators. These are child GameObjects (built-in
+        // primitives), not generated Mesh assets, so there's no asset leak here —
+        // but keeping the same flags avoids copy-pasting bare DontSave into a script
+        // that DOES create meshes (where DontSave's DontUnloadUnusedAsset leaks them).
         foreach (Transform child in transform)
-            child.gameObject.hideFlags = HideFlags.DontSave;
+            child.gameObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
     }
 
     private void ClearChildren()
