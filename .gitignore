@@ -62,5 +62,8 @@ Thumbs.db
 # Unity screenshot tool output
 /Assets/[Ss]creenshots/
 /Assets/[Ss]creenshots.meta
+# Unity crash recovery copies (local only)
+/Assets/_Recovery/
+/Assets/_Recovery.meta
 # Stray reference drops in project root
 /5wvm9sdh.jpg
